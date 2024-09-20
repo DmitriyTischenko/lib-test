@@ -20,32 +20,64 @@ class Book
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\ManyToOne(targetEntity: Author::class)]
+    #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id')]
+    private Author|null $author = null;
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    /**
+     * @return string|null
+     */
     public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    public function setTitle(string $title): static
+    /**
+     * @param string|null $title
+     */
+    public function setTitle(?string $title): void
     {
         $this->title = $title;
-
-        return $this;
     }
 
+    /**
+     * @return string|null
+     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    public function setDescription(?string $description): static
+    /**
+     * @param string|null $description
+     */
+    public function setDescription(?string $description): void
     {
         $this->description = $description;
+    }
+
+    /**
+     * @return Author|null
+     */
+    public function getAuthor(): ?Author
+    {
+        return $this->author;
+    }
+
+    /**
+     * @param Author|null $author
+     */
+    public function setAuthor(?Author $author): static
+    {
+        $this->author = $author;
 
         return $this;
     }
 }
+
+    
