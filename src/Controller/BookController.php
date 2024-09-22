@@ -32,7 +32,7 @@ class BookController extends AbstractController
     public function index(): Response
     {
         $books = $this->bookRepository->findAll();
-        return $this->json($books);
+        return $this->json($books, 200, [], ['groups' => ['book:read']]);
     }
 
     #[Route('/api/books/{id}', methods: ['GET'])]
@@ -42,36 +42,43 @@ class BookController extends AbstractController
         if (!$book) {
             return $this->json(['message' => 'Книга не найдена'], Response::HTTP_NOT_FOUND);
         }
-        return $this->json($book);
+        return $this->json($book, 200, [], ['groups' => ['book:read']]);
     }
 
     #[Route('/api/books', methods: ['POST'])]
     public function create(Request $request): Response
     {
+        // Получаем данные из запроса
         $data = json_decode($request->getContent(), true);
+
+        // Создаем новую книгу
         $book = new Book();
         $book->setTitle($data['title']);
         $book->setDescription($data['description']);
-        $author = $this->authorRepository->find($data['author_id']);
 
+        // Ищем автора по его id
+        $author = $this->authorRepository->find($data['author_id']);
         if (!$author) {
             return $this->json(['error' => 'Author not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Установка автора
+        // Устанавливаем автора для книги
         $book->setAuthor($author);
 
+        // Валидация книги
         $errors = $this->validator->validate($book);
         if (count($errors) > 0) {
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
-        // Сохранение через EntityManager
+        // Сохраняем книгу в базе данных
         $this->entityManager->persist($book);
         $this->entityManager->flush();
 
-        return $this->json($book, Response::HTTP_CREATED);
+        // Возвращаем созданную книгу в ответе
+        return $this->json($book, Response::HTTP_CREATED, [], ['groups' => ['book:read']]); //Пустой массив это заголовки
     }
+
 
     #[Route('/api/books/{id}', methods: ['PUT'])]
     public function update(Request $request, int $id): Response
@@ -85,6 +92,14 @@ class BookController extends AbstractController
         $book->setTitle($data['title']);
         $book->setDescription($data['description']);
 
+        $author = $this->authorRepository->find($data['author_id']);
+        if (!$author) {
+            return $this->json(['error' => 'Author not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Устанавливаем автора для книги
+        $book->setAuthor($author);
+
         $errors = $this->validator->validate($book);
         if (count($errors) > 0) {
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
@@ -93,7 +108,7 @@ class BookController extends AbstractController
         // Обновление через EntityManager
         $this->entityManager->flush();
 
-        return $this->json($book);
+        return $this->json($book, 200, [], ['groups' => ['book:write']]);
     }
 
     #[Route('/api/books/{id}', methods: ['DELETE'])]
