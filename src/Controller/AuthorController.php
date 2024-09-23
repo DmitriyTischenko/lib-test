@@ -2,105 +2,90 @@
 
 namespace App\Controller;
 
-use AllowDynamicProperties;
 use App\Entity\Author;
+use App\Form\AuthorType;
 use App\Repository\AuthorRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[AllowDynamicProperties] class AuthorController extends AbstractController
+#[Route('/admin/author')]
+final class AuthorController extends AbstractController
 {
-
-    public function __construct(EntityManagerInterface $entityManager,
-                                ValidatorInterface $validator,
-                                AuthorRepository $authorRepository)
+    #[Route(name: 'app_author_index', methods: ['GET'])]
+    public function index(AuthorRepository $authorRepository, PaginatorInterface $paginator,  Request $request): Response
     {
-        $this->entityManager = $entityManager;
-        $this->validator = $validator;
-        $this->authorRepository = $authorRepository;
+        $page = $request->query->getInt('page', 1);
+
+        // Получаем все книги и передаем их в пагинатор
+        $authors = $paginator->paginate(
+            $authorRepository->findAll(),
+            $page,
+            10
+        );
+
+        return $this->render('author/index.html.twig', [
+            'authors' => $authors,
+        ]);
     }
 
-    #[Route('/api/author', methods: ['GET'])]
-    public function index(): Response
+    #[Route('/new', name: 'app_author_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $authors = $this->authorRepository->findAll();
-        return $this->json($authors, 200, [], ['groups' => ['author:read']]);
-    }
-
-    #[Route('/api/author/{id}', methods: ['GET'])]
-    public function show(int $id): Response
-    {
-        $author = $this->authorRepository->find($id);
-
-        if (!$author) {
-            return $this->json(['message' => 'Книга не найдена'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($author, 200, [], ['groups' => ['author:read']]);
-    }
-
-    #[Route('/api/author', methods: ['POST'])]
-    public function create(Request $request): Response
-    {
-        // Получаем данные из запроса
-        $data = json_decode($request->getContent(), true);
-
         $author = new Author();
-        $author->setName($data['name']);
-        $author->setSurname($data['surname']);
+        $form = $this->createForm(AuthorType::class, $author);
+        $form->handleRequest($request);
 
-        $errors = $this->validator->validate($author);
-        if (count($errors) > 0) {
-            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($author);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_author_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        $this->entityManager->persist($author);
-        $this->entityManager->flush();
-
-        // Возвращаем созданную книгу в ответе
-        return $this->json($author, Response::HTTP_CREATED, [], ['groups' => ['author:read']]); //Пустой массив это заголовки
+        return $this->render('author/new.html.twig', [
+            'author' => $author,
+            'form' => $form,
+        ]);
     }
 
-
-    #[Route('/api/author/{id}', methods: ['PUT'])]
-    public function update(Request $request, int $id): Response
+    #[Route('/{id}', name: 'app_author_show', methods: ['GET'])]
+    public function show(Author $author): Response
     {
-        $author = $this->authorRepository->find($id);
-        if (!$author) {
-            return $this->json(['message' => 'Автор не найдена'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $author->setName($data['name']);
-        $author->setSurname($data['surname']);
-
-        $errors = $this->validator->validate($author);
-        if (count($errors) > 0) {
-            return $this->json($errors, Response::HTTP_BAD_REQUEST);
-        }
-
-        $this->entityManager->flush();
-
-        return $this->json($author, 200, [], ['groups' => ['author:write']]);
+        return $this->render('author/show.html.twig', [
+            'author' => $author,
+        ]);
     }
 
-
-    #[Route('/api/author/{id}', methods: ['DELETE'])]
-    public function delete(int $id): Response
+    #[Route('/{id}/edit', name: 'app_author_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Author $author, EntityManagerInterface $entityManager): Response
     {
-        $author = $this->authorRepository->find($id);
-        if (!$author) {
-            return $this->json(['message' => 'Автор не найден'], Response::HTTP_NOT_FOUND);
+        $form = $this->createForm(AuthorType::class, $author);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_author_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        $this->entityManager->remove($author);
-        $this->entityManager->flush();
-
-        return $this->json(['message' => 'Автор удален']);
+        return $this->render('author/edit.html.twig', [
+            'author' => $author,
+            'form' => $form,
+        ]);
     }
 
+    #[Route('/{id}', name: 'app_author_delete', methods: ['POST'])]
+    public function delete(Request $request, Author $author, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$author->getId(), $request->getPayload()->getString('_token'))) {
+            $entityManager->remove($author);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_author_index', [], Response::HTTP_SEE_OTHER);
+    }
 }

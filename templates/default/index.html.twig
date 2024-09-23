@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Books for users{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper {
+        margin: 1em auto;
+        max-width: 800px;
+        width: 95%;
+        font: 18px/1.5 sans-serif;
+    }
+
+    .example-wrapper code {
+        background: #F5F5F5;
+        padding: 2px 6px;
+    }
+</style>
+
+    <div class="example-wrapper">
+        <h1>BOOKS! ✅</h1>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Author</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for book in books %}
+                <tr>
+                    <td>{{ book.id }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.description }}</td>
+                    <td>{{ book.author.name }} {{ book.author.surname }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">No books found.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            {{ knp_pagination_render(books) }}
+        </div>
+    </div>
+
+
+{% endblock %}

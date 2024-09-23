@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\AuthorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -18,10 +19,12 @@ class Author
     private ?int $id = null;
     #[Groups(['book:read', 'book:write', 'author:read', 'author:write'])]
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['book:read', 'book:write', 'author:read', 'author:write'])]
+    #[Assert\NotBlank]
     private ?string $surname = null;
 
     #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'author')]

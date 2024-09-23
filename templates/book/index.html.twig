@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Book index{% endblock %}
+
+{% block body %}
+    <div class="align">
+        <h1>Book index</h1>
+        <a href="{{ path('app_author_index') }}">to authors</a>
+    </div>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for book in books %}
+            <tr>
+                <td>{{ book.id }}</td>
+                <td>{{ book.title }}</td>
+                <td>{{ book.description }}</td>
+                <td>
+                    <a href="{{ path('app_book_show', {'id': book.id}) }}">show</a>
+                    <a href="{{ path('app_book_edit', {'id': book.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="pagination">
+        {{ knp_pagination_render(books) }}
+    </div>
+
+    <a href="{{ path('app_book_new') }}">Create new</a>
+{% endblock %}
