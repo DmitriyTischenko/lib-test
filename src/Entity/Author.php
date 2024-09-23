@@ -19,7 +19,7 @@ class Author
     private ?int $id = null;
     #[Groups(['book:read', 'book:write', 'author:read', 'author:write'])]
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'message is required')]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
