@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20240920085524 extends AbstractMigration
+final class Version20240923025322 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -19,15 +19,13 @@ final class Version20240920085524 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE book ADD author_id INT DEFAULT NULL');
-        $this->addSql('ALTER TABLE book ADD CONSTRAINT FK_CBE5A331F675F31B FOREIGN KEY (author_id) REFERENCES author (id)');
-        $this->addSql('CREATE INDEX IDX_CBE5A331F675F31B ON book (author_id)');
+        $this->addSql('ALTER TABLE book DROP FOREIGN KEY FK_CBE5A331F675F31B');
+        $this->addSql('ALTER TABLE book ADD CONSTRAINT FK_CBE5A331F675F31B FOREIGN KEY (author_id) REFERENCES author (id) ON DELETE SET NULL');
     }
 
     public function down(Schema $schema): void
     {
         $this->addSql('ALTER TABLE book DROP FOREIGN KEY FK_CBE5A331F675F31B');
-        $this->addSql('DROP INDEX IDX_CBE5A331F675F31B ON book');
-        $this->addSql('ALTER TABLE book DROP author_id');
+        $this->addSql('ALTER TABLE book ADD CONSTRAINT FK_CBE5A331F675F31B FOREIGN KEY (author_id) REFERENCES author (id) ON UPDATE NO ACTION ON DELETE NO ACTION');
     }
 }
